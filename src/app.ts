@@ -1,8 +1,15 @@
 import express from "express";
+import v1TodoRouter from "./v1/todoRoutes";
+import livenessRoute from "./v1/livenessRoute";
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(port, () => {
-  console.log(`Todos application is running on port ${port}.`);
+app.use(express.json());
+
+app.use("/", livenessRoute);
+app.use("/api/v1/todos", v1TodoRouter);
+
+app.listen(PORT, () => {
+  console.log(`API is listening on port ${PORT}`);
 });
