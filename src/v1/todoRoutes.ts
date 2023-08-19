@@ -1,5 +1,5 @@
 import express from "express";
-import TodoService from "../services/todoService";
+import TodoService, { NotFoundError } from "../services/todoService";
 import {
   CreateRequestParser,
   QueryRequestParser,
@@ -10,11 +10,11 @@ import { z } from "zod";
 const router = express.Router();
 const todoService = new TodoService();
 
-router.post("/query", (req, res) => {
+router.post("/query", async (req, res) => {
   try {
     const queryRequest = QueryRequestParser.parse(req.body);
-    console.log({ queryRequest });
-    res.status(200).send({ status: "OK" });
+    const response = await todoService.query(queryRequest);
+    res.status(201).send(response);
   } catch (error: any) {
     console.log("Error while query: ", error);
     if (error instanceof z.ZodError) {
@@ -23,36 +23,38 @@ router.post("/query", (req, res) => {
         .send(
           `Bad input: ${error.issues[0].message} - ${error.issues[0].path}`
         );
+    } else {
+      res.status(500).send("Internal error");
     }
-    res.status(500).send("Internal error");
   }
 });
 
-router.post("/create", (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const createRequest = CreateRequestParser.parse(req.body);
-    console.log({ createRequest });
-    res.send("add");
+    const response = await todoService.create(createRequest);
+    res.status(201).send(response);
   } catch (error: any) {
-    console.log("Error while query: ", error);
+    console.log("Error while create: ", error);
     if (error instanceof z.ZodError) {
       res
         .status(400)
         .send(
           `Bad input: ${error.issues[0].message} - ${error.issues[0].path}`
         );
+    } else {
+      res.status(500).send("Internal error");
     }
-    res.status(500).send("Internal error");
   }
 });
 
-router.post("/update", (req, res) => {
+router.post("/update", async (req, res) => {
   try {
     const updateRequest = UpdateRequestParser.parse(req.body);
-    console.log({ updateRequest });
-    res.send("delete");
+    const response = await todoService.update(updateRequest);
+    res.status(200).send(response);
   } catch (error: any) {
-    console.log("Error while query: ", error);
+    console.log("Error while update: ", error);
     if (error instanceof z.ZodError) {
       res
         .status(400)
@@ -60,7 +62,11 @@ router.post("/update", (req, res) => {
           `Bad input: ${error.issues[0].message} - ${error.issues[0].path}`
         );
     }
-    res.status(500).send("Internal error");
+    if (error instanceof NotFoundError) {
+      res.status(400).send(error.message);
+    } else {
+      res.status(500).send("Internal error");
+    }
   }
 });
 

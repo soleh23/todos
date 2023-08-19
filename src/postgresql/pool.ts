@@ -13,3 +13,7 @@ export async function query(text: string, params: any[]) {
     throw error;
   }
 }
+
+export async function getClient() {
+  return await pool.connect();
+}
