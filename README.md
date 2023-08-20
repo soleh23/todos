@@ -11,85 +11,102 @@ The sync process between the 2 services is as follows:
 
 API definitions (same for both services)
 
+```
 type Todo = {
-id: number;
-name: string;
-description?: string;
-groupId: number;
-done: boolean;
-external: boolean;
-externalId?: number;
-createdAt: number;
-updatedAt: number;
+  id: number;
+  name: string;
+  description?: string;
+  groupId: number;
+  done: boolean;
+  external: boolean;
+  externalId?: number;
+  createdAt: number;
+  updatedAt: number;
 };
+```
 
 - http://localhost:${PORT}/api/v1/todos/create
 
-* Request body {
+```
+Request body {
   name: string().min(3).max(50),
   description: string().min(1).max(200).optional(),
   groupId: number().int().nonnegative(),
   done: boolean().optional(),
   }
-
-* Response body {
+```
+```
+Response body {
   item: Todo
   }
+```
 
 - http://localhost:${PORT}/api/v1/todos/webhook/create
 
-* Request body {
+```
+Request body {
   name: string().min(3).max(50),
   description: string().min(1).max(200).optional(),
   done: boolean().optional(),
   external: boolean(),
   externalId: number().int().positive(),
   }
-
-* Response body {
+```
+```
+Response body {
   items: Todo
   }
+```
 
 - http://localhost:${PORT}/api/v1/todos/update
 
-* Request body {
+```
+Request body {
   items: {
   id: number().positive(),
   done: z.boolean(),
   }[]
   }
-
-* Response body {
+```
+```
+Response body {
   items: Todo[]
   }
+```
 
 - http://localhost:${PORT}/api/v1/todos/webhook/update
 
-* Request body {
+```
+Request body {
   items: {
   externalId: number().positive(),
   done: z.boolean(),
   }[]
   }
-
-* Response body {
+```
+```
+Response body {
   items: Todo[]
   }
+```
 
 - http://localhost:${PORT}/api/v1/todos/query
 
-* Request body {
+```
+Request body {
   limit: number().min(1).max(100).optional(),
   cursor: number().int().positive().optional(),
   done: boolean().optional(),
   groupId: number().int().positive().optional(),
   }
-
-* Response body:
+```
+```
+Response body:
   {
   items: Todo[];
   cursor: number | undefined;
   }
+```
 
 To start the `internal` service simple run
 
