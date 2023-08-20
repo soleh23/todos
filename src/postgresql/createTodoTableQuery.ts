@@ -8,8 +8,11 @@ CREATE TABLE IF NOT EXISTS todos(
     description VARCHAR(200),
     group_id INT NOT NULL,
     done boolean NOT NULL,
+    external boolean NOT NULL,
+    external_id INTEGER,
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
-    PRIMARY KEY (ID)
+    PRIMARY KEY (ID),
+    UNIQUE (external_id)
 );
 `;

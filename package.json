@@ -2,23 +2,25 @@
   "name": "todos",
   "version": "1.0.0",
   "description": "Simple todo service",
-  "main": "index.js",
+  "main": "app.ts",
   "repository": "git@github.com:soleh23/todos.git",
   "author": "Solehjon Ruziboev <solehruziboev@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon src/app.ts",
-    "start:prod": "node .build/app.js"
+    "start:local": "NODE_ENV=local nodemon src/app.ts",
+    "start:external": "NODE_ENV=external nodemon src/app.ts"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/node": "^20.4.10",
     "@types/pg": "^8.10.2",
+    "dotenv": "^16.3.1",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
   "dependencies": {
+    "axios": "^1.4.0",
     "express": "^4.18.2",
     "pg": "^8.11.2",
     "zod": "^3.21.4"

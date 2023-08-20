@@ -16,8 +16,22 @@ export class NotFoundError extends Error {
     this.name = "NotFoundError";
   }
 }
+
 export default class TodoService {
-  // Returns an id of created Todo
+  private toTodo(row: any): Todo {
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      groupId: row.group_id,
+      done: row.done,
+      external: row.external,
+      externalId: row.external_id,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
   async create(createRequest: CreateRequest): Promise<CreateResponse> {
     try {
       await query(createTodoTableQuery, []);
@@ -28,52 +42,72 @@ export default class TodoService {
       // NOTE: need to make sure group id exists
       const groupId = createRequest.groupId;
       const done = createRequest.done || false;
+      const external = createRequest.external || false;
+      const externalId = createRequest.externalId || null;
       const timestamp = Date.now();
 
       const response = await query(
         `
-          INSERT INTO todos (name, description, groupId, done, created_at, updated_at)
-          VALUES ($1, $2, $3, $4, $5, $6)
+          INSERT INTO todos (name, description, group_id, done, external, external_id, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           RETURNING *
         `,
-        [name, description, groupId, done, timestamp, timestamp]
+        [
+          name,
+          description,
+          groupId,
+          done,
+          external,
+          externalId,
+          timestamp,
+          timestamp,
+        ]
       );
-      const id: number = response.rows[0]["id"];
-      return { id };
+      if (response.rows.length !== 1) {
+        throw Error("Unexpected number of rows returned while creating");
+      }
+      const item = this.toTodo(response.rows[0]);
+      return { item };
     } catch (error: any) {
       console.log("Error on TodoService.create: ", error);
       throw error;
     }
   }
 
-  // Returns whether the update was successful
   async update(updateRequest: UpdateRequest): Promise<UpdateRespone> {
     let client = null;
     try {
       client = await getClient();
       await client.query("BEGIN");
 
-      for (let i = 0; i < updateRequest.items.length; i++) {
-        const updateItem = updateRequest.items[i];
-        const response = await client.query(
-          `SELECT count(*) from todos WHERE id=$1 LIMIT 1`,
-          [updateItem.id]
-        );
-        if (response.rows[0].count != 1) {
-          throw new NotFoundError(`Id ${updateItem.id} not found`);
+      if (updateRequest.ignoreUnknownItems === false) {
+        for (let i = 0; i < updateRequest.items.length; i++) {
+          const updateItem = updateRequest.items[i];
+          const response = await client.query(
+            `SELECT count(*) from todos WHERE id=$1 OR external_id=$2 LIMIT 1`,
+            [updateItem.id, updateItem.externalId]
+          );
+          if (response.rows[0].count != 1) {
+            throw new NotFoundError(`Id ${updateItem.id} not found`);
+          }
         }
       }
 
       const timestamp = Date.now();
+      const updatedTodos: Todo[] = [];
       for (let i = 0; i < updateRequest.items.length; i++) {
-        const updateItem = updateRequest.items[i];
-        await client.query(
-          `UPDATE todos SET done = $1, updated_at = $2 WHERE id = $3`,
-          [updateItem.done, timestamp, updateItem.id]
+        const updatedItem = updateRequest.items[i];
+        const response = await client.query(
+          `UPDATE todos SET done=$1, updated_at=$2 WHERE id=$3 OR external_id=$4 RETURNING *`,
+          [updatedItem.done, timestamp, updatedItem.id, updatedItem.externalId]
         );
+        if (response.rows.length > 0) {
+          updatedTodos.push(this.toTodo(response.rows[0]));
+        }
       }
-      const response = await client.query("COMMIT");
-      return;
+
+      await client.query("COMMIT");
+      return { items: updatedTodos };
     } catch (error: any) {
       console.log("Error on TodoService.create: ", error);
       await client.query("ROLLBACK");
@@ -112,15 +146,7 @@ export default class TodoService {
         `,
         values
       );
-      const todos: Todo[] = response.rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        groupId: row.group_id,
-        done: row.done,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      }));
+      const todos: Todo[] = response.rows.map(this.toTodo);
       const nextCursor =
         todos.length === 0 ? undefined : todos[todos.length - 1].id;
       return { items: todos, cursor: nextCursor };

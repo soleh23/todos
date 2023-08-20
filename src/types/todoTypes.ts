@@ -3,30 +3,36 @@ import { z } from "zod";
 export const CreateRequestParser = z.object({
   name: z.string().min(3).max(50),
   description: z.string().min(1).max(200).optional(),
-  groupId: z.number().int().positive(),
-  done: z.boolean().optional(), // TODO: potentially support more general 'status' field
+  groupId: z.number().int().nonnegative(),
+  done: z.boolean().optional(), // TODO: support more general 'status' field
+  external: z.boolean().optional(), // TODO: support more general 'external' field
+  externalId: z.number().int().positive().optional(),
 });
 
 export type CreateRequest = z.infer<typeof CreateRequestParser>;
 
 export type CreateResponse = {
-  id: number;
+  item: Todo;
 };
 
 export const UpdateItemRequestParser = z.object({
-  id: z.number(),
+  id: z.number().positive().optional(),
+  externalId: z.number().positive().optional(),
   done: z.boolean(),
 });
 
 export type UpdateItemRequest = z.infer<typeof UpdateItemRequestParser>;
 
 export const UpdateRequestParser = z.object({
-  items: z.array(UpdateItemRequestParser).min(1).max(100),
+  items: z.array(UpdateItemRequestParser).min(1).max(10),
+  ignoreUnknownItems: z.boolean().optional(),
 });
 
 export type UpdateRequest = z.infer<typeof UpdateRequestParser>;
 
-export type UpdateRespone = {};
+export type UpdateRespone = {
+  items: Todo[];
+};
 
 export type Todo = {
   id: number;
@@ -34,6 +40,8 @@ export type Todo = {
   description?: string;
   groupId: number;
   done: boolean;
+  external: boolean;
+  externalId?: number;
   createdAt: number;
   updatedAt: number;
 };
