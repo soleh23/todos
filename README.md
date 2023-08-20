@@ -9,6 +9,8 @@ The sync process between the 2 services is as follows:
 - When a todo gets updated in `internal` service it also gets updated in `external` service
 - The old data in `external` service does NOT get synced with `internal` service.
 
+The general idea behind sync logic is that on every api we check if there is a webhook attached to it, if so we call it. This is was the fastest way I could think of to implement the feature. I would also consider exposing a pub/sub, or and api to fetch changes in a given time range or starting from cursor. Lets talk about this!
+
 API definitions (same for both services)
 
 ```
@@ -35,6 +37,7 @@ Request body {
   done: boolean().optional(),
   }
 ```
+
 ```
 Response body {
   item: Todo
@@ -52,6 +55,7 @@ Request body {
   externalId: number().int().positive(),
   }
 ```
+
 ```
 Response body {
   items: Todo
@@ -68,6 +72,7 @@ Request body {
   }[]
   }
 ```
+
 ```
 Response body {
   items: Todo[]
@@ -84,6 +89,7 @@ Request body {
   }[]
   }
 ```
+
 ```
 Response body {
   items: Todo[]
@@ -100,6 +106,7 @@ Request body {
   groupId: number().int().positive().optional(),
   }
 ```
+
 ```
 Response body:
   {
