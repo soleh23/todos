@@ -53,7 +53,6 @@ router.post("/create", async (req, res) => {
 router.post("/webhook/create", async (req, res) => {
   try {
     const createRequest = CreateRequestParser.parse(req.body);
-    createRequest.external = true;
     const response = await todoService.create(createRequest);
     res.status(201).send(response);
   } catch (error: any) {

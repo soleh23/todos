@@ -1,6 +1,7 @@
-// NOTE: in production environment groupId would be a foreign key to 'groups' table,
+// NOTE: This is just to establish and showcase the schema.
 // I decided to omit creating 'groups' table for simplicity.
-// Also in production environment I would use sql migrations technologies to manage database schema.
+// In production environment groupId would be a foreign key to 'groups' table.
+// Also in production environment I would use established postgresql migrations software to manage database schema.
 export const createTodoTableQuery = `
 CREATE TABLE IF NOT EXISTS todos(
     id SERIAL,

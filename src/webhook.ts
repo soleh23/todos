@@ -11,7 +11,7 @@ function toCreateRequest(createResponse: CreateResponse): CreateRequest {
   return {
     name: createResponse.item.name,
     description: createResponse.item.description || undefined,
-    groupId: 0,
+    groupId: 0, // some constant to bypass existence constraint
     done: createResponse.item.done,
     external: true,
     externalId: createResponse.item.id || undefined,
@@ -38,6 +38,8 @@ function toUpdateRequest(updateResponse: UpdateRespone): UpdateRequest {
   return { items };
 }
 
+// NOTE: this is a bit ugly because it handle bi-directional updates.
+// In reality ofcouse this would 2 separate servers thus the logic would simpler as well.
 export async function handleUpdateWebhook(updateResponse: UpdateRespone) {
   try {
     if (UPDATE_WEB_HOOK) {
