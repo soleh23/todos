@@ -115,12 +115,17 @@ Response body:
   }
 ```
 
-To start the `internal` service simple run
+To start the `internal` service simply run
 
 - yarn
 - yarn start:local
 
-To start the `external` service simple run
+To start the `external` service simply run
 
 - yarn
 - yarn start:external
+
+Testing, simply run
+
+- yarn
+- yarn test

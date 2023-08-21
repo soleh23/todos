@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app = express();
-const PORT = parseInt(process.env.PORT);
 export const CREATE_WEB_HOOK = process.env.CREATE_WEB_HOOK;
 export const UPDATE_WEB_HOOK = process.env.UPDATE_WEB_HOOK;
 
@@ -24,6 +23,4 @@ app.use((error: any, req, res, next) => {
   next();
 });
 
-app.listen(PORT, () => {
-  console.log(`API is listening on port ${PORT}`);
-});
+export default app;

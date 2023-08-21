@@ -6,16 +6,19 @@ import {
   UpdateRequestParser,
 } from "../types/todoTypes";
 import { z } from "zod";
-import { handleCreateWebhook, handleUpdateWebhook } from "../webhook";
+import { handleCreateWebhook } from "../webhooks/createWebhook";
+import { handleUpdateWebhook } from "../webhooks/updateWebhook";
 
 const router = express.Router();
 const todoService = new TodoService();
+
+// TODO: extract out common error handling
 
 router.post("/query", async (req, res) => {
   try {
     const queryRequest = QueryRequestParser.parse(req.body);
     const response = await todoService.query(queryRequest);
-    res.status(201).send(response);
+    res.status(200).json(response);
   } catch (error: any) {
     console.log("Error while query: ", error);
     if (error instanceof z.ZodError) {
@@ -35,7 +38,7 @@ router.post("/create", async (req, res) => {
     const createRequest = CreateRequestParser.parse(req.body);
     const response = await todoService.create(createRequest);
     await handleCreateWebhook(response);
-    res.status(201).send(response);
+    res.status(201).json(response);
   } catch (error: any) {
     console.log("Error while create: ", error);
     if (error instanceof z.ZodError) {
@@ -50,11 +53,12 @@ router.post("/create", async (req, res) => {
   }
 });
 
+// TODO: test
 router.post("/webhook/create", async (req, res) => {
   try {
     const createRequest = CreateRequestParser.parse(req.body);
     const response = await todoService.create(createRequest);
-    res.status(201).send(response);
+    res.status(201).json(response);
   } catch (error: any) {
     console.log("Error while webhook create: ", error);
     if (error instanceof z.ZodError) {
@@ -75,7 +79,7 @@ router.post("/update", async (req, res) => {
     const response = await todoService.update(updateRequest);
     // TODO: currently our app is sending all updates to the external app, we need to filter out internal updates and send only external updates
     await handleUpdateWebhook(response);
-    res.status(200).send(response);
+    res.status(200).json(response);
   } catch (error: any) {
     console.log("Error while update: ", error);
     if (error instanceof z.ZodError) {
@@ -92,13 +96,14 @@ router.post("/update", async (req, res) => {
   }
 });
 
+// TODO: test
 router.post("/webhook/update", async (req, res) => {
   try {
     const updateRequest = UpdateRequestParser.parse(req.body);
     // NOTE: related to issue on line 78
     updateRequest.ignoreUnknownItems = true;
     const response = await todoService.update(updateRequest);
-    res.status(200).send(response);
+    res.status(200).json(response);
   } catch (error: any) {
     console.log("Error while webhook update: ", error);
     if (error instanceof z.ZodError) {

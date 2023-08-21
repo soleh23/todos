@@ -8,7 +8,6 @@ import {
   Todo,
 } from "../types/todoTypes";
 import { getClient, query } from "../postgresql/pool";
-import { createTodoTableQuery } from "../postgresql/createTodoTableQuery";
 
 export class NotFoundError extends Error {
   constructor(message) {
@@ -34,8 +33,6 @@ export default class TodoService {
 
   async create(createRequest: CreateRequest): Promise<CreateResponse> {
     try {
-      await query(createTodoTableQuery, []);
-
       const name = createRequest.name;
       const description = createRequest.description || null;
 
@@ -132,7 +129,8 @@ export default class TodoService {
 
       let groupIdFilter = "";
       if (queryRequest.groupId !== undefined) {
-        groupIdFilter = " AND groupId=$4";
+        const valuesIndex = values.length;
+        groupIdFilter = ` AND group_id=$${valuesIndex + 1}`;
         values.push(queryRequest.groupId);
       }
 
@@ -148,7 +146,9 @@ export default class TodoService {
       );
       const todos: Todo[] = response.rows.map(this.toTodo);
       const nextCursor =
-        todos.length === 0 ? undefined : todos[todos.length - 1].id;
+        todos.length === 0 || todos.length < limit
+          ? undefined
+          : todos[todos.length - 1].id;
       return { items: todos, cursor: nextCursor };
     } catch (error: any) {
       console.log("Error on TodoService.create: ", error);
